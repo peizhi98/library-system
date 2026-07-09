@@ -2,12 +2,9 @@ package com.example.librarysystem.controller;
 
 import com.example.librarysystem.LibrarySystemApplication;
 import com.example.librarysystem.dto.RegisterBookRequest;
-import com.example.librarysystem.dto.RegisterBorrowerRequest;
-import com.example.librarysystem.model.BorrowStatus;
 import com.example.librarysystem.repository.BookEditionRepository;
 import com.example.librarysystem.repository.BookRepository;
 import com.example.librarysystem.repository.BorrowRecordRepository;
-import com.example.librarysystem.repository.BorrowerRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,7 +24,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest(classes = LibrarySystemApplication.class)
 @ActiveProfiles("test")
-class LibraryControllerMockMvcTest {
+class BookControllerIntegrationTest {
 
     @Autowired
     private WebApplicationContext context;
@@ -38,13 +35,10 @@ class LibraryControllerMockMvcTest {
     @Autowired
     private BookEditionRepository bookEditionRepository;
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
-
-    @Autowired
-    private BorrowerRepository borrowerRepository;
-
     @Autowired
     private BorrowRecordRepository borrowRecordRepository;
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     private MockMvc mockMvc;
 
@@ -53,7 +47,6 @@ class LibraryControllerMockMvcTest {
         borrowRecordRepository.deleteAll();
         bookRepository.deleteAll();
         bookEditionRepository.deleteAll();
-        borrowerRepository.deleteAll();
         mockMvc = MockMvcBuilders.webAppContextSetup(context).build();
     }
 
@@ -62,13 +55,6 @@ class LibraryControllerMockMvcTest {
         req.setIsbn(isbn);
         req.setTitle(title);
         req.setAuthor(author);
-        return req;
-    }
-
-    private RegisterBorrowerRequest borrowerRequest(String name, String email) {
-        var req = new RegisterBorrowerRequest();
-        req.setName(name);
-        req.setEmail(email);
         return req;
     }
 
@@ -150,86 +136,5 @@ class LibraryControllerMockMvcTest {
                 .andExpect(jsonPath("$.content.length()").value(1))
                 .andExpect(jsonPath("$.totalElements").value(1))
                 .andExpect(jsonPath("$.totalPages").value(1));
-    }
-
-    @Test
-    void registerBorrower_shouldCreateAndReturnBorrower() throws Exception {
-        var request = borrowerRequest("Alice Smith", "alice@example.com");
-
-        mockMvc.perform(post("/api/borrowers")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").isNumber())
-                .andExpect(jsonPath("$.name").value("Alice Smith"))
-                .andExpect(jsonPath("$.email").value("alice@example.com"));
-
-        assertThat(borrowerRepository.count()).isOne();
-    }
-
-    @Test
-    void borrowAndReturnBook_shouldSucceed() throws Exception {
-        var bookReq = bookRequest("978-1-11-111111-1", "Borrow Test", "Author A");
-        String bookJson = mockMvc.perform(post("/api/books")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(bookReq)))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
-
-        long bookId = objectMapper.readTree(bookJson).get("id").asLong();
-
-        var borrowerReq = borrowerRequest("Bob", "bob@test.com");
-        String borrowerJson = mockMvc.perform(post("/api/borrowers")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(borrowerReq)))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
-
-        long borrowerId = objectMapper.readTree(borrowerJson).get("id").asLong();
-
-        mockMvc.perform(post("/api/borrowers/{borrowerId}/borrow/{bookId}", borrowerId, bookId))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$").value("Book borrowed successfully"));
-
-        assertThat(bookRepository.findById(bookId).orElseThrow().isAvailable()).isFalse();
-        assertThat(borrowRecordRepository
-                .findByBorrowerIdAndBookIdAndStatus(borrowerId, bookId, BorrowStatus.BORROWED))
-                .isPresent();
-
-        mockMvc.perform(post("/api/borrowers/{borrowerId}/return/{bookId}", borrowerId, bookId))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$").value("Book returned successfully"));
-
-        assertThat(borrowRecordRepository
-                .findByBorrowerIdAndBookIdAndStatus(borrowerId, bookId, BorrowStatus.RETURNED))
-                .isPresent();
-        assertThat(bookRepository.findById(bookId).orElseThrow().isAvailable()).isTrue();
-    }
-
-    @Test
-    void borrowUnavailableBook_shouldReject() throws Exception {
-        var bookReq = bookRequest("978-2-22-222222-2", "Unavailable Test", "Author B");
-        String bookJson = mockMvc.perform(post("/api/books")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(bookReq)))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
-
-        long bookId = objectMapper.readTree(bookJson).get("id").asLong();
-
-        var borrowerReq = borrowerRequest("Carol", "carol@test.com");
-        String borrowerJson = mockMvc.perform(post("/api/borrowers")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(borrowerReq)))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
-
-        long borrowerId = objectMapper.readTree(borrowerJson).get("id").asLong();
-
-        mockMvc.perform(post("/api/borrowers/{borrowerId}/borrow/{bookId}", borrowerId, bookId))
-                .andExpect(status().isOk());
-
-        mockMvc.perform(post("/api/borrowers/{borrowerId}/borrow/{bookId}", borrowerId, bookId))
-                .andExpect(status().isConflict());
     }
 }
