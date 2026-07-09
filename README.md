@@ -23,6 +23,12 @@ Built with **Java 17** and **Spring Boot 4.1**, using **Gradle** for dependency 
 
 ---
 
+## Entity-Relationship Diagram
+
+![ERD](erd.png)
+
+---
+
 ## Database Choice: PostgreSQL
 
 **PostgreSQL** was chosen for the following reasons:
