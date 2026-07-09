@@ -260,7 +260,7 @@ All errors return a JSON body with either a string `error` field or a map of fie
 
 The repository includes a GitHub Actions workflow (`.github/workflows/ci.yml`) that runs on every push and pull request to the `main` branch. It compiles the project, runs tests, and packages the application.
 
-A **deploy** step is defined as a placeholder only — actual deployment is out of scope for this task. To enable deployment, replace the placeholder script with your target platform's deployment command.
+A **deploy** step is defined as a placeholder only, actual deployment is out of scope for this task.
 
 ---
 
@@ -282,4 +282,4 @@ A **deploy** step is defined as a placeholder only — actual deployment is out 
 
 8. **Timestamp precision** – All timestamps use `ZonedDateTime` (TIMESTAMPTZ in PostgreSQL) to handle timezone-aware date/time recording.
 
-9. **Sorting and searching by `isbn`, `title`, or `author` is not required, and the dataset is assumed small enough** that a `LEFT JOIN` to `book_editions` is not a performance concern. If these assumptions change, the columns can be duplicated to `books` without changing the API contract.
+9. **Sorting and searching by `isbn`, `title`, or `author` are out of scope.** – Using a `LEFT JOIN` to `book_editions` keeps the model normalized and sufficiently supports the required queries. If future requirements introduce filtering or sorting on these fields and profiling identifies the join as a bottleneck, the data model can be optimized (e.g., through denormalization or other techniques) without changing the API contract.
