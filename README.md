@@ -276,4 +276,4 @@ A **deploy** step is defined as a placeholder only — actual deployment is out 
 
 8. **Timestamp precision** – All timestamps use `ZonedDateTime` (TIMESTAMPTZ in PostgreSQL) to handle timezone-aware date/time recording.
 
-9. **Denormalized book fields for search performance** – The list-all-books API (`GET /books`) is not required to support search or sort. However, `isbn`, `title`, and `author` are denormalized into the `books` table so that if search support is added later, queries can filter on these columns with `WHERE` clauses (e.g., `WHERE title ILIKE ?`) without a JOIN to `book_editions`.
+9. **Sorting and searching by `isbn`, `title`, or `author` is not required, and the dataset is assumed small enough** that a `LEFT JOIN` to `book_editions` is not a performance concern. If these assumptions change, the columns can be duplicated to `books` without changing the API contract.

@@ -22,24 +22,12 @@ public class Book {
     private BookEdition edition;
 
     @Column(nullable = false)
-    private String isbn;
-
-    @Column(nullable = false)
-    private String title;
-
-    @Column(nullable = false)
-    private String author;
-
-    @Column(nullable = false)
     private boolean available;
 
     public Book() {}
 
     public Book(BookEdition edition) {
         this.edition = edition;
-        this.isbn = edition.getIsbn();
-        this.title = edition.getTitle();
-        this.author = edition.getAuthor();
         this.available = true;
     }
 
@@ -47,12 +35,9 @@ public class Book {
     public void setId(Long id) { this.id = id; }
     public BookEdition getEdition() { return edition; }
     public void setEdition(BookEdition edition) { this.edition = edition; }
-    public String getIsbn() { return isbn; }
-    public void setIsbn(String isbn) { this.isbn = isbn; }
-    public String getTitle() { return title; }
-    public void setTitle(String title) { this.title = title; }
-    public String getAuthor() { return author; }
-    public void setAuthor(String author) { this.author = author; }
+    public String getIsbn() { return edition.getIsbn(); }
+    public String getTitle() { return edition.getTitle(); }
+    public String getAuthor() { return edition.getAuthor(); }
     public boolean isAvailable() { return available; }
     public void setAvailable(boolean available) { this.available = available; }
 }

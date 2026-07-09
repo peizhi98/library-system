@@ -45,7 +45,7 @@ public class BookService {
 
     @Transactional(readOnly = true)
     public PaginatedBookResponse getAllBooks(int page, int size) {
-        Page<Book> bookPage = bookRepository.findAll(
+        Page<Book> bookPage = bookRepository.findAllWithEdition(
                 PageRequest.of(page, size, Sort.by("id"))
         );
         List<BookDTO> content = bookPage.getContent().stream()
@@ -56,7 +56,7 @@ public class BookService {
     }
 
     private BookDTO toDTO(Book book) {
-        return new BookDTO(book.getId(), book.getIsbn(), book.getTitle(),
-                book.getAuthor(), book.isAvailable());
+        return new BookDTO(book.getId(), book.getEdition().getIsbn(), book.getEdition().getTitle(),
+                book.getEdition().getAuthor(), book.isAvailable());
     }
 }
